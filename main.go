@@ -8,12 +8,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// Line is used to store the content of a line in a file
-// and its number
-type Line struct {
-	content string
-	number  int
-}
+// Lines is used to store the content of a file
+type Lines []string
 
 // check if a rune is a letter in the range (a...z) or (A...Z)
 func isLetter(r rune) bool {
@@ -23,10 +19,25 @@ func isLetter(r rune) bool {
 	return true
 }
 
-func applyCipher(line *Line, c chan *Line, key int) {
-	translated := make([]rune, 0, len(line.content))
+func (l Lines) cipherAll(key int) {
+	nLines := len(l)
+	ch := make(chan int)
 
-	for _, r := range line.content {
+	for i := 0; i < nLines; i++ {
+		go applyCipher(l, i, ch, key)
+	}
+
+	for i := 0; i < nLines; i++ {
+		<-ch
+	}
+
+}
+
+func applyCipher(lines Lines, i int, c chan int, key int) {
+	line := lines[i]
+	translated := make([]rune, 0, len(line))
+
+	for _, r := range line {
 		if isLetter(r) {
 			shifted := int(r) + key
 			if r >= 'a' && r <= 'z' {
@@ -48,14 +59,14 @@ func applyCipher(line *Line, c chan *Line, key int) {
 		}
 	}
 
-	line.content = string(translated)
-	c <- line
+	lines[i] = string(translated)
+	c <- 1
 
 }
 
 // readFile opens a file at the specified path and returns
 // a slice of strings that represents the lines of its content
-func readFile(path string) ([]string, error) {
+func readFile(path string) (Lines, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
