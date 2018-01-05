@@ -21,7 +21,7 @@ func isLetter(r rune) bool {
 
 func (l Lines) cipherAll(key int) {
 	nLines := len(l)
-	ch := make(chan int)
+	ch := make(chan int, nLines)
 
 	for i := 0; i < nLines; i++ {
 		go applyCipher(l, i, ch, key)
@@ -106,7 +106,10 @@ func main() {
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
-		fmt.Println(lines)
+		lines.cipherAll(-12)
+		for _, l := range lines {
+			fmt.Println(l)
+		}
 		return nil
 	}
 
