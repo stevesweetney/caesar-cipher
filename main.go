@@ -83,30 +83,72 @@ func readFile(path string) (Lines, error) {
 	return lines, nil
 }
 
+func errorMessage(message string) bool {
+	fmt.Println(message)
+	return false
+}
+
 func main() {
-	var fileName string
+	var decrypt bool
+	var input string
+	var output string
+	var key int
 
 	app := cli.NewApp()
 	app.Name = "Caesar-Cipher"
 	app.Usage = "Encrypts/Decrypts a text file."
+	app.UsageText = "Usage: caesar-cipher [OPTIONS] -i input -o output -k key"
 	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:        "decrypt, d",
+			Usage:       "Decrypts the input file if set. Defaults to encrypting",
+			Destination: &decrypt,
+		},
 		cli.StringFlag{
-			Name:        "encrypt, e, decrypt, d",
+			Name:        "input, i",
 			Usage:       "`File` to encrypt/decrypt",
-			Destination: &fileName,
+			Destination: &input,
+		},
+		cli.StringFlag{
+			Name:        "output, o",
+			Usage:       "output file",
+			Destination: &output,
+		},
+		cli.IntFlag{
+			Name:        "key, k",
+			Usage:       "Number between 1-25 to use when shifting",
+			Destination: &key,
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
-		if c.NumFlags() == 0 {
+		ok := true
+		if input == "" {
+			ok = errorMessage("ERROR: input argument required")
+		}
+
+		if output == "" {
+			ok = errorMessage("ERROR: output argument required")
+		}
+
+		if key < 1 || key > 25 {
+			ok = errorMessage("ERROR: enter a number between 1-25 to use as key")
+		}
+
+		if !ok {
 			return cli.ShowAppHelp(c)
 		}
 
-		lines, err := readFile(fileName)
+		lines, err := readFile(input)
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
-		lines.cipherAll(-12)
+
+		if decrypt {
+			key = -key
+		}
+		lines.cipherAll(key)
+
 		for _, l := range lines {
 			fmt.Println(l)
 		}
