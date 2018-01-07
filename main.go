@@ -11,6 +11,25 @@ import (
 // Lines is used to store the content of a file
 type Lines []string
 
+func saveFile(path string, content Lines) {
+	if _, err := os.Stat(path); err == nil {
+		fmt.Printf("%s already exists", path)
+		return
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Printf("Error occurred opening file %s", err)
+		return
+	}
+	defer file.Close()
+
+	for _, l := range content {
+		formatted := fmt.Sprintf("%s\r\n", l)
+		file.WriteString(formatted)
+	}
+}
+
 // check if a rune is a letter in the range (a...z) or (A...Z)
 func isLetter(r rune) bool {
 	if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
@@ -149,9 +168,7 @@ func main() {
 		}
 		lines.cipherAll(key)
 
-		for _, l := range lines {
-			fmt.Println(l)
-		}
+		saveFile(output, lines)
 		return nil
 	}
 
