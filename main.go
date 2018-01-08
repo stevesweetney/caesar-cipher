@@ -38,7 +38,9 @@ func isLetter(r rune) bool {
 	return true
 }
 
-func (l Lines) cipherAll(key int) {
+// CipherAll shifts all the letters in each line by the key arguement
+// shift right for numbers > 0, shift left for numbers < 0
+func (l Lines) CipherAll(key int) {
 	nLines := len(l)
 	ch := make(chan int, nLines)
 
@@ -83,9 +85,9 @@ func applyCipher(lines Lines, i int, c chan int, key int) {
 
 }
 
-// readFile opens a file at the specified path and returns
+// ReadFile opens a file at the specified path and returns
 // a slice of strings that represents the lines of its content
-func readFile(path string) (Lines, error) {
+func ReadFile(path string) (Lines, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -158,7 +160,7 @@ func main() {
 			return cli.ShowAppHelp(c)
 		}
 
-		lines, err := readFile(input)
+		lines, err := ReadFile(input)
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
@@ -166,7 +168,7 @@ func main() {
 		if decrypt {
 			key = -key
 		}
-		lines.cipherAll(key)
+		lines.CipherAll(key)
 
 		saveFile(output, lines)
 		return nil
