@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/urfave/cli"
 )
@@ -41,20 +42,27 @@ func isLetter(r rune) bool {
 // CipherAll shifts all the letters in each line by the key arguement
 // shift right for numbers > 0, shift left for numbers < 0
 func (l Lines) CipherAll(key int) {
+	numCPU := runtime.NumCPU()
 	nLines := len(l)
 	ch := make(chan int, nLines)
 
-	for i := 0; i < nLines; i++ {
-		go applyCipher(l, i, ch, key)
+	for i := 0; i < numCPU; i++ {
+		go l.doSome(i*nLines/numCPU, (i+1)*nLines/numCPU, ch, key)
 	}
 
-	for i := 0; i < nLines; i++ {
+	for i := 0; i < numCPU; i++ {
 		<-ch
 	}
-
 }
 
-func applyCipher(lines Lines, i int, c chan int, key int) {
+func (l Lines) doSome(i, n int, ch chan int, key int) {
+	for ; i < n; i++ {
+		applyCipher(l, i, key)
+	}
+	ch <- 1
+}
+
+func applyCipher(lines Lines, i int, key int) {
 	line := lines[i]
 	translated := make([]rune, 0, len(line))
 
@@ -81,8 +89,6 @@ func applyCipher(lines Lines, i int, c chan int, key int) {
 	}
 
 	lines[i] = string(translated)
-	c <- 1
-
 }
 
 // ReadFile opens a file at the specified path and returns
