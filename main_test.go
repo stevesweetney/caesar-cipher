@@ -3,6 +3,13 @@ package main
 import "testing"
 
 var path = "./benchFiles/words.txt"
+var a Lines = []string{}
+
+func init() {
+	for i := 0; i < 1000000; i++ {
+		a = append(a, "The quick brown fox jumps over the lazy dog")
+	}
+}
 
 func TestReadFile(t *testing.T) {
 	_, err := ReadFile(path)
@@ -13,10 +20,7 @@ func TestReadFile(t *testing.T) {
 }
 
 func BenchmarkCipherAll(b *testing.B) {
-	linesBench, _ := ReadFile(path)
-	b.ResetTimer()
-
 	for i := 0; i < b.N; i++ {
-		linesBench.CipherAll(13)
+		a.CipherAll(13)
 	}
 }
